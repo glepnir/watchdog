@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"reflect"
 	"syscall"
 	"time"
@@ -38,12 +37,11 @@ func main() {
 }
 
 func currentPath() string {
-	ex, err := os.Executable()
+	dir, err := os.Getwd()
 	if err != nil {
 		log.Fatal("error")
 	}
-	path := filepath.Dir(ex)
-	return path
+	return dir
 }
 
 func watchStart(ctx context.Context, runflag bool) {
