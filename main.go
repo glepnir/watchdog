@@ -8,10 +8,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"reflect"
 	"syscall"
 	"time"
@@ -44,8 +46,32 @@ func currentPath() string {
 	return dir
 }
 
+func findRootfile(currentPath string) bool {
+	files, err := ioutil.ReadDir(currentPath)
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+	for _, file := range files {
+		ex := filepath.Ext(currentPath + string(os.PathSeparator) + file.Name())
+		if ex == ".mod" {
+			return true
+		}
+	}
+	return false
+}
+
+func findRootPath(dir string) string {
+	if findRootfile(dir) {
+		return dir
+	}
+	parent := filepath.Dir(dir)
+	return findRootPath(parent)
+}
+
 func watchStart(ctx context.Context, runflag bool) {
-	fullname := currentPath() + "/" + filename + ".go"
+	sep := string(os.PathSeparator)
+	fullname := currentPath() + sep + filename + ".go"
 	done := make(chan struct{})
 	go watchFile(fullname, done, ctx)
 	go run(ctx, command, fullname, done, runflag)
